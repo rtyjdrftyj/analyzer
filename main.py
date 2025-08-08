@@ -18,7 +18,9 @@ def analyze_song_as_scores(file_path):
     if not os.path.exists(file_path):
         return None
     try:
-        y, sr = librosa.load(file_path)
+        # The key change is here: added sr=22050 to reduce memory usage
+        y, sr = librosa.load(file_path, sr=22050)
+        
         tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
         rhythm_strength = np.mean(librosa.onset.onset_strength(y=y, sr=sr))
         rhythm_score = min(100, max(0, (rhythm_strength - 0.2) / 0.8 * 100))
@@ -66,4 +68,5 @@ async def analyze_audio(file: UploadFile = File(...)):
         else:
             raise HTTPException(status_code=500, detail="Analysis failed")
     finally:
+        os.remove(temp_file_path)
         os.remove(temp_file_path)
